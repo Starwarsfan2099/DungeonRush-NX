@@ -9,7 +9,7 @@ This fork of the project is for the Nintendo Switch. Multiplayer, local or LAN i
 
 ## Download
 
-Download from the releases tab! Everything is in the NRO file.
+[Download from the releases tab!](https://github.com/Starwarsfan2099/DungeonRush-NX/releases/tag/1.0.0) Everything is in the NRO file.
 
 ## Release Note
 
