@@ -1,6 +1,6 @@
 #include "render.h"
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -10,7 +10,7 @@
 #include "res.h"
 #include "types.h"
 
-#ifdef DBG
+#ifdef DEBUG
 #include <assert.h>
 #endif
 
@@ -216,7 +216,7 @@ void renderAnimation(Animation* ani) {
     setEffect(ani->origin, ani->effect);
     ani->effect->currentFrame %= ani->effect->duration;
   }
-#ifdef DBG
+#ifdef DEBUG
   assert(ani->duration >= ani->origin->frames);
 #endif
   int stage = 0;
@@ -227,7 +227,7 @@ void renderAnimation(Animation* ani) {
   SDL_RenderCopyEx(renderer, ani->origin->origin, &(ani->origin->crops[stage]),
                    &dst, ani->angle, &poi, ani->flip);
   if (ani->effect) unsetEffect(ani->origin);
-#ifdef DBG_CROSS
+#ifdef DEBUG_CROSS
   if (ani->at == AT_BOTTOM_CENTER) {
     Sprite fake;
     fake.ani = ani;
@@ -354,6 +354,7 @@ void renderId() {
     if (snake->sprites->head) {
       Sprite* snakeHead = snake->sprites->head->element;
       if (i == powerful)
+        // Render player name. 
         renderCenteredTextBackground(&texts[4 + i], snakeHead->x, snakeHead->y,
                                      0.5);
       renderCenteredText(&texts[4 + i], snakeHead->x, snakeHead->y, 0.5);

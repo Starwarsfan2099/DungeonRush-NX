@@ -1,6 +1,6 @@
 #include "game.h"
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -19,8 +19,9 @@
 #include "sprite.h"
 #include "types.h"
 #include "weapon.h"
+#include "debug.h"
 
-#ifdef DBG
+#ifdef DEBUG
 #include <assert.h>
 #endif
 extern const int SCALE_FACTOR;
@@ -604,9 +605,6 @@ bool crushVerdict(Sprite* sprite, bool loose, bool useAnimationBox) {
 
 void dropItem(Sprite* sprite) {
   double random = randDouble() * sprite->dropRate * GAME_LUCKY;
-#ifdef DBG
-// printf("%lf\n", random);
-#endif
   if (random < GAME_DROPOUT_YELLOW_FLASKS)
     dropItemNearSprite(sprite, ITEM_HP_EXTRA_MEDCINE);
   else if (random > GAME_DROPOUT_WEAPONS)
@@ -725,14 +723,13 @@ bool makeSnakeCross(Snake* snake) {
           LOOP_ONCE, SPRITE_ANIMATION_DURATION, sprite->x, sprite->y,
           sprite->face == RIGHT ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL, 0,
           AT_BOTTOM_CENTER);
-      /* TOO BLOODY
+          // Bloody
   createAndPushAnimation(
       &animationsList[RENDER_LIST_MAP_SPECIAL_ID], &textures[randInt(RES_BLOOD1,
   RES_BLOOD4)],NULL , LOOP_INFI, SPRITE_ANIMATION_DURATION, sprite->x +
   randInt(-MAP_BLOOD_SPILL_RANGE, MAP_BLOOD_SPILL_RANGE), sprite->y +
   randInt(-MAP_BLOOD_SPILL_RANGE, MAP_BLOOD_SPILL_RANGE), sprite->face == RIGHT
   ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL, 0, AT_BOTTOM_CENTER);
-      */
       clearBindInAnimationsList(sprite, RENDER_LIST_EFFECT_ID);
       clearBindInAnimationsList(sprite, RENDER_LIST_SPRITE_ID);
       removeAnimationFromLinkList(&animationsList[RENDER_LIST_SPRITE_ID],
@@ -988,9 +985,12 @@ void pauseGame() {
   SDL_Event e;
   for (bool quit = 0; !quit;) {
     while (SDL_PollEvent(&e)) {
-      if (e.type == SDL_QUIT || e.type == SDL_KEYDOWN) {
-        quit = true;
-        break;
+      switch(e.type) {
+        case SDL_JOYBUTTONDOWN:
+          if (e.jbutton.button == JOY_PLUS) {
+            quit = true;
+            break;
+          }
       }
     }
   }
@@ -998,36 +998,38 @@ void pauseGame() {
   playAudio(AUDIO_BUTTON1);
 }
 
-int arrowsToDirection(int keyValue) {
-  switch (keyValue) {
-    case SDLK_LEFT:
+// Use this for two player mode. 
+int buttonsToDirection(SDL_Event event) {
+  switch (event.jbutton.button) {
+    case JOY_Y:
       return LEFT;
       break;
-    case SDLK_RIGHT:
+    case JOY_A:
       return RIGHT;
       break;
-    case SDLK_UP:
+    case JOY_X:
       return UP;
       break;
-    case SDLK_DOWN:
+    case JOY_B:
       return DOWN;
       break;
   }
   return -1;
 }
 
-int wasdToDirection(int keyValue) {
-  switch (keyValue) {
-    case SDLK_a:
+// Instead of looking at key values, check for button presses.
+int padToDirection(SDL_Event event) {
+  switch (event.jbutton.button) {
+    case JOY_LEFT:
       return LEFT;
       break;
-    case SDLK_d:
+    case JOY_RIGHT:
       return RIGHT;
       break;
-    case SDLK_w:
+    case JOY_UP:
       return UP;
       break;
-    case SDLK_s:
+    case JOY_DOWN:
       return DOWN;
       break;
   }
@@ -1038,26 +1040,37 @@ bool handleLocalKeypress() {
   static SDL_Event e;
   bool quit = false;
   while (SDL_PollEvent(&e)) {
-    if (e.type == SDL_QUIT) {
-      quit = true;
-      setTerm(GAME_OVER);
-    } else if (e.type == SDL_KEYDOWN) {
-      int keyValue = e.key.keysym.sym;
-      if (keyValue == SDLK_ESCAPE) pauseGame();
-      for (int id = 0; id <= 1 && id < playersCount; id++) {
-        Snake* player = spriteSnake[id];
-        if (player->playerType == LOCAL) {
-          if (!player->buffs[BUFF_FROZEN] && player->sprites->head != NULL) {
-            int direction = id == 0 ? arrowsToDirection(keyValue)
-                                    : wasdToDirection(keyValue);
-            if (direction >= 0) {
-              sendPlayerMovePacket(id, direction);
-              changeSpriteDirection(player->sprites->head, direction);
+      switch(e.type) {
+        case SDL_JOYBUTTONDOWN:
+          if (e.jbutton.button == JOY_MINUS) {
+            quit = true;
+            setTerm(GAME_OVER);
+          } else if (e.jbutton.button == JOY_PLUS) {
+            pauseGame();
+          } else {
+            for (int id = 0; id <= 1 && id < playersCount; id++) {
+              Snake* player = spriteSnake[id];
+              if (player->playerType == LOCAL) {
+                if (!player->buffs[BUFF_FROZEN] && player->sprites->head != NULL) {
+                  if (id == 0) {
+                    int direction = padToDirection(e);
+                    if (direction >= 0) {
+                      sendPlayerMovePacket(id, direction);
+                      changeSpriteDirection(player->sprites->head, direction);
+                    }
+                  } else {
+                    // If two players, use one joycon's buttons for the second player.
+                    int direction = buttonsToDirection(e);
+                    if (direction >= 0) {
+                      sendPlayerMovePacket(id, direction);
+                      changeSpriteDirection(player->sprites->head, direction);
+                    }
+                  }
+                }
+              }
             }
           }
-        }
       }
-    }
   }
   return quit;
 }
@@ -1071,12 +1084,16 @@ void handleLanKeypress() {
     PlayerMovePacket* playerMovePacket = (PlayerMovePacket*)(&packet);
     Snake* player = spriteSnake[playerMovePacket->playerId];
     int direction = playerMovePacket->direction;
-    fprintf(stderr, "recv: player move, %d, %d\n", playerMovePacket->playerId,
+    #ifdef DEBUG
+      TRACE("recv: player move, %d, %d\n", playerMovePacket->playerId,
             direction);
+    #endif
     if (player->sprites->head)
       changeSpriteDirection(player->sprites->head, direction);
   } else if (type == HEADER_GAMEOVER) {
-    fprintf(stderr, "recv: game over, %d\n", -1);
+    #ifdef DEBUG
+      TRACE("recv: game over, %d\n", -1);
+    #endif
     setTerm(GAME_OVER);
   }
 }

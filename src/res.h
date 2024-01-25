@@ -1,7 +1,7 @@
 #ifndef SNAKE_RES_H_
 #define SNAKE_RES_H_
 
-#include <SDL.h>
+#include <SDL2/SDL.h>
 #include "types.h"
 
 #define VERSION_STRING "v1.1(beta)"
@@ -11,8 +11,8 @@
 #define TEXTURES_SIZE 1024
 #define EFFECTS_SIZE 128
 #define UNIT 32
-#define SCREEN_WIDTH 1440
-#define SCREEN_HEIGHT 960
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
 #define FONT_SIZE 32
 // Resource ID
 // Map Resource
@@ -169,16 +169,18 @@
 #define AUDIO_CLAW_HIT_HEAVY 15
 #define AUDIO_COIN 16
 #define AUDIO_MED 17
+extern const char configFile[];
 
 bool init();
 void cleanup();
 bool loadMedia();
 SDL_Texture* loadSDLTexture(const char* path);
 bool loadTileset(const char* path, SDL_Texture* origin);
-bool loadTextset();
+bool loadTextset(const char* path);
 void initCommonEffects();
 void initCommonAnimations();
 void initCommonSprites();
+bool copyFile();
 
 extern SDL_Renderer* renderer;
 #endif

@@ -15,3 +15,5 @@ Local
 Lan
 Host a game
 Join a game
+Set Player Name
+Player name changed!

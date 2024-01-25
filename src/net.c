@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include "debug.h"
 
 #define CASSERT(EXPRESSION) switch (0) {case 0: case (EXPRESSION):;}
 
@@ -70,7 +71,9 @@ void hostGame() {
   SDLNet_ResolveHost(&listenIp, INADDR_ANY, LAN_LISTEN_PORT);
   lanServerSocket = SDLNet_TCP_Open(&listenIp);
   if (!lanServerSocket) {
-    fprintf(stderr, "hostGame: %s\n", SDLNet_GetError());
+    #ifdef DEBUG
+      TRACE("hostGame: %s\n", SDLNet_GetError());
+    #endif
     exit(-1);
   }
 
@@ -91,9 +94,11 @@ void hostGame() {
     SDL_RenderPresent(renderer);
     bool quit = false;
     while (SDL_PollEvent(&e)) {
-      if (e.type == SDL_QUIT || 
-          (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)) {
-        quit = true;
+      switch (e.type) {
+        case SDL_JOYBUTTONDOWN:
+          if (e.jbutton.button == JOY_MINUS) {
+            quit = true;
+          }
       }
     }
     if (quit) break;
@@ -128,7 +133,9 @@ void hostGame() {
   SDLNet_TCP_Send(lanClientSocket, buffer, sizeof(HandShakePacket));
 
   unsigned seed = handShakePacket.seed;
-  fprintf(stderr, "seed: %d\n", seed);
+  #ifdef DEBUG
+    TRACE("seed: %d\n", seed);
+  #endif
   prngSrand(seed);
 
   setLevel(0);
@@ -143,8 +150,11 @@ void hostGame() {
 
 void joinGame(const char* hostname, Uint16 port) {
   IPaddress serverIp;
+  TRACE("Resolving: %s", hostname);
   if (SDLNet_ResolveHost(&serverIp, hostname, port)) {
-    fprintf(stderr, "joinGame: ResolveHost: %s\n", SDLNet_GetError());
+    #ifdef DEBUG
+      TRACE("joinGame: ResolveHost: %s\n", SDLNet_GetError());
+    #endif
     exit(-1);
   }
 
@@ -161,16 +171,20 @@ void joinGame(const char* hostname, Uint16 port) {
   unsigned frameCount = 0;
   while (!lanClientSocket) {
     while (SDL_PollEvent(&e)) {
-      if (e.type == SDL_QUIT || 
-          (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)) {
-        quit = true;
+      switch (e.type) {
+        case SDL_JOYBUTTONDOWN:
+          if (e.jbutton.button == JOY_MINUS) {
+            quit = true;
+          }
       }
     }
     if (quit) break;
 
     lanClientSocket = SDLNet_TCP_Open(&serverIp);
     if (lanClientSocket == NULL) {
-      fprintf(stderr, "connect: %s\n", SDL_GetError());
+      #ifdef DEBUG
+        TRACE("connect: %s\n", SDL_GetError());
+      #endif
     }
     clearRenderer();
     renderCenteredText(connecting[(frameCount++)/20%4], SCREEN_WIDTH/2, SCREEN_HEIGHT/2, 2);
@@ -193,7 +207,9 @@ void joinGame(const char* hostname, Uint16 port) {
 
     unsigned seed = handShakePacket.seed;
     prngSrand(seed);
-    fprintf(stderr, "seed: %d\n", seed);
+    #ifdef DEBUG
+      TRACE("seed: %d\n", seed);
+    #endif
 
     // Start game
     setLevel(0);

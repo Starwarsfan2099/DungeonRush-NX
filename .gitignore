@@ -8,3 +8,5 @@ dungeon_rush
 *.o
 *.gch
 build
+*.elf
+*.nacp

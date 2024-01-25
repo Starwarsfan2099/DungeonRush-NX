@@ -5,29 +5,11 @@
 
 *I work on the small project on my own so the code lacks of comments.*
 
+This fork of the project is for the Nintendo Switch. Multiplayer, local or LAN is completely functional. 
+
 ## Download
 
-[Windows(64bit)](https://github.com/Rapiz1/DungeonRush/releases/download/v1.1-beta/DungeonRush-v1.1-beta-Windows-x86_64.zip)
-
-[Windows(32bit)](https://github.com/Rapiz1/DungeonRush/releases/download/v1.1-beta/DungeonRush-v1.1-beta-Windows-i686.zip)
-
-[Linux](https://github.com/Rapiz1/DungeonRush/releases/download/v1.1-beta/DungeonRush-v1.1-beta-linux.zip)
-
-[Someone port it to android!](https://github.com/imrunning/DungeonRush_Android)
-
-AppImage for Linux is also available in release page.
-
-[Archlinux AUR](https://aur.archlinux.org/packages/dungeonrush/)
-
-```yay -S dungeonrush```
-
-[Archlinux AUR(git version)](https://aur.archlinux.org/packages/dungeonrush-git/)
-
-```yay -S dungeonrush-git```
-
-*The game supports macOS but I don't have an Mac to compile for it.*
-
-The executable is called `dungeon_rush`
+Download from the releases tab! Everything is in the NRO file.
 
 ## Release Note
 
