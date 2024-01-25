@@ -50,7 +50,7 @@ ROMFS	:=	romfs
 ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
 CFLAGS	:=	`$(PREFIX)pkg-config --cflags sdl2 SDL2_mixer SDL2_net SDL2_image SDL2_ttf` -Wall -Wno-unused-function -O2 -ffunction-sections \
-			$(ARCH) $(DEFINES) -DDEBUG
+			$(ARCH) $(DEFINES)
 
 CFLAGS	+=	-D__SWITCH__ $(INCLUDE) `sdl2-config --cflags`
 
