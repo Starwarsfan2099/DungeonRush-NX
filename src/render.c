@@ -375,7 +375,7 @@ void renderInfo() {
   for (int i = 0; i < playersCount; i++) {
     char buf[1 << 8];
     calcScore(spriteSnake[i]->score);
-    sprintf(buf, "Player%d:%5d", i + 1,
+    sprintf(buf, "Player %d:%5d", i + 1,
             (int)(spriteSnake[i]->score->rank + 0.5));
     setText(scoresText[i], buf);
     renderText(scoresText[i], startX, startY, 1);
