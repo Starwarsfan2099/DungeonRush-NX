@@ -106,6 +106,7 @@ bool init() {
   // Initialize the romfs.
   romfsInit();
   chdir("romfs:/");
+  socketInitializeDefault();
 
   // Initialize SDL
   if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0) {
